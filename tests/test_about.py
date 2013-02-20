@@ -5,6 +5,7 @@ states = ('foo', 'bar', 'baz')
 sentinel_a = object()
 sentinel_b = object()
 
+
 class TestCollection(unittest.TestCase):
 
     def test_set_states_adds_to_all(self):
