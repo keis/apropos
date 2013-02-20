@@ -1,11 +1,34 @@
 import json
 
 class Storage(object):
+    '''Storage handle
 
-    def __init__(self, file):
+    Each storage is associated with a filename where the data will be read
+    and written to. It's possible to provide custom JSON encoder/decoders and
+    it is  is *requried* if the state data or terms are not basic types.
+    '''
+
+    def __init__(self, file, encoder=None, decoder=None):
+        '''Initialise a storage handle
+
+        specify the JSON encoder/decoder to use by passing `encoder` and
+        `decoder` respectivly.
+        '''
+
         self.file = file
+        self.encoder = encoder
+        self.decoder = decoder
 
     def save(self, all, state):
+        '''Writes the state serialised to JSON to file.
+
+        The structure of the serialised data differs from the in memory
+        tracking by making the tracked objects primary. Each term's associated
+        subset of the state is attached. This is done to allow for
+        sharding of the storage (not implemented) without getting any partial
+        data.
+        '''
+
         def row(item):
             return {
                 'item': item,
