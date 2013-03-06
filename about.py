@@ -54,6 +54,10 @@ class Storage(object):
                 yield (row['item'], row['state'])
 
 
+class UnknownState(ValueError):
+    '''Raised when a lookup of a untracked state is made'''
+
+
 class Tracker(object):
     '''Generic state tracker.
 
@@ -63,6 +67,14 @@ class Tracker(object):
 
     # sentinel
     __no_term = object()
+
+    # KeyError should only be used when a term is missing from a state
+    # to not hide programming errors when cathing KeyError in client code.
+    class container(dict):
+        '''dict specialisation that raises UnknownError'''
+
+        def __missing__(self, key):
+            raise UnknownState(key)
 
     @classmethod
     def is_alias(cls, state):
@@ -76,7 +88,7 @@ class Tracker(object):
 
     def __init__(self, states, storage=None):
         self.states = tuple(states)
-        self._states = dict(((s, {}) for s in states))
+        self._states = self.container(((s, {}) for s in states))
         self._storage = storage
 
         # Generate the handle class
@@ -189,10 +201,11 @@ class Tracker(object):
         '''
 
         c = self._states[state]
-        clear = [k for (k,v) in c.items() if not key(k, v)]
+        clear = [k for (k, v) in c.items() if not key(k, v)]
         for key in clear:
             del c[key]
         return clear
+
 
 if __name__ == '__main__':
     about = Tracker(('spam', 'egg'), Storage('test.json'))

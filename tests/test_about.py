@@ -1,4 +1,4 @@
-from about import Tracker
+from about import Tracker, UnknownState
 import unittest
 
 states = ('foo', 'bar', 'baz')
@@ -26,6 +26,11 @@ class TestSetGet(unittest.TestCase):
         a = Tracker(states)
         with self.assertRaises(KeyError):
             a.pop_state('foo', sentinel_a)
+
+    def test_get_invalid(self):
+        a = Tracker(states)
+        with self.assertRaises(UnknownState):
+            a.get_state('flurb', sentinel_a)
 
 
 class TestCollection(unittest.TestCase):
