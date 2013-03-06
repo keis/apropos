@@ -61,6 +61,9 @@ class Tracker(object):
     this class usable as a glorified dictionary.
     '''
 
+    # sentinel
+    __no_term = object()
+
     @classmethod
     def is_alias(cls, state):
         '''Create a function that can be used as a alias for a in query.
@@ -117,26 +120,44 @@ class Tracker(object):
         '''Set a object as being in a particular state.'''
         self._states[state][obj] = data
 
-    def get_state(self, state, obj):
-        '''Get the associated data of the named state for the object.
+    def get_state(self, state, obj=__no_term):
+        '''Get objects and data of state, or get object data from state
+
+        When called with only state name this method will return a iterable
+        with all objects and their associated data in that state. If a object
+        is given in addition this method will return the associated data of
+        that object in the named state.
 
         If the object is not in the named state KeyError will be raised.
         '''
-        return self._states[state][obj]
 
-    def clear_state(self, state, obj):
-        '''Set a object as not being in a particular state.
+        c = self._states[state]
+
+        if obj is self.__no_term:
+            return iter(c.items())
+
+        return c[obj]
+
+    def clear_state(self, state, obj=__no_term):
+        '''Set a single object or all objects as not being in the named state.
+
+        When called with only state name this method will set all objects
+        currently in the named state as no longer being in the named state. If
+        called with a object it sets that object as not being in the state.
 
         If the object is not in the named state no action is taken
         '''
+
         c = self._states[state]
+
+        if obj is self.__no_term:
+            self._states[state] = {}
+            return
+
         if obj in c:
             del c[obj]
 
-    # sentinel
-    __list_state = object()
-
-    def in_state(self, state, obj=__list_state):
+    def in_state(self, state, obj=__no_term):
         '''List objects in state, or check if a object is in that state
 
         When called with only state name this method will return a iterable
@@ -146,11 +167,32 @@ class Tracker(object):
 
         c = self._states[state]
 
-        if obj is self.__list_state:
+        if obj is self.__no_term:
             return c.keys()
 
         return obj in c
 
+    def pop_state(self, state, obj):
+        '''Set a object as not being in a particular state and return value.
+
+        If the object is not in the named state KeyError will be raised.
+        '''
+        return self._states[state].pop(obj)
+
+    def filter_state(self, state, key=lambda t, v: v):
+        '''Removed terms from state as decided by key function
+
+        If no key function is given this method will remove any term which
+        associated data is falsy.
+
+        A iterable of removed keys is returned.
+        '''
+
+        c = self._states[state]
+        clear = [k for (k,v) in c.items() if not key(k, v)]
+        for key in clear:
+            del c[key]
+        return clear
 
 if __name__ == '__main__':
     about = Tracker(('spam', 'egg'), Storage('test.json'))
