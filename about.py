@@ -86,6 +86,16 @@ class Tracker(object):
         '''
         return lambda self, obj: self.in_state(state, obj)
 
+    @classmethod
+    def state_property(cls, state):
+        '''Create a property that returns a iterable of all terms in a state.
+
+            >>> class MyTracker(Tracker):
+            ...     pending = Tracker.state_property('pending')
+            ...
+        '''
+        return property(lambda self: self.in_state(state))
+
     def __init__(self, states, storage=None):
         self.states = tuple(states)
         self._states = self.container(((s, {}) for s in states))
