@@ -1,4 +1,4 @@
-from about import Tracker, UnknownState
+from apropos import Tracker, UnknownState
 import unittest
 
 states = ('foo', 'bar', 'baz')
